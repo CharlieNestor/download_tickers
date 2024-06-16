@@ -13,7 +13,7 @@ This project retrieves and processes data for US-listed stocks from the NYSE, NA
 ## Usage
 
 ### Running the Streamlit App
-To start the Streamlit app, run the following command:
+To start the Streamlit app, run the following command in the Terminal:
 ```sh
 streamlit run ticker_streamlit.py
 
