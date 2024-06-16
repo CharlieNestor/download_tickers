@@ -1,6 +1,6 @@
 # US Stock Ticker Analysis
 
-This project retrieves and processes data for US-listed stocks from the NYSE, NASDAQ, and AMEX exchanges. It provides functionality to filter the data by various criteria and visualize it using Streamlit. It allows for downloads of the ticker list in CSV file.
+This project retrieves and processes data for US-listed stocks from the NYSE, NASDAQ, and AMEX exchanges. Finding, selecting, and filtering a valid list of US stock tickers can be challenging due to the vast number of stocks and limited availability of up-to-date and searchable sources. This project simplifies that process by providing functionality to filter the data by various criteria, visualize it using Streamlit and download it in a CSV file.
 
 
 ## Features
