@@ -31,7 +31,7 @@ def params(exchange):
     )
 
 
-def _exchange2df(exchange):
+def fetch_exchange_data(exchange):
     """
     send customized request to the url and output the dataset via pd.DataFrame
     """
@@ -46,18 +46,18 @@ def _exchange2df(exchange):
         print(f"Failed to fetch data: {r.status_code}")
 
 
-def get_df(NYSE=True, NASDAQ=True, AMEX=True):
+def get_combined_df(NYSE=True, NASDAQ=True, AMEX=True):
     """
     download DataFrames from all 3 exchanges and output a single DataFrame concatenated 
     and sorted by ticker
     """
     df_list = []
     if NYSE:
-        df_list.append(_exchange2df('nyse'))
+        df_list.append(fetch_exchange_data('nyse'))
     if NASDAQ:
-        df_list.append(_exchange2df('nasdaq'))
+        df_list.append(fetch_exchange_data('nasdaq'))
     if AMEX:
-        df_list.append(_exchange2df('amex'))
+        df_list.append(fetch_exchange_data('amex'))
     result_df = pd.concat(df_list, ignore_index=True)
     # select only specific columns from the dataset
     new_order = ['symbol', 'name', 'exchange', 'marketCap', 'sector', 'industry', 'lastsale','ipoyear','country','url']
@@ -88,7 +88,7 @@ class Tickers():
     """
 
     def __init__(self):
-        self.original_dataset = get_df()
+        self.original_dataset = get_combined_df()
         self.max_cap = self.calculate_max()
         self.data = self.original_dataset.copy()
         self.tickers_list = self.get_tickers()
