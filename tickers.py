@@ -136,9 +136,11 @@ class Tickers():
             self.reset_data()
 
         if exchange is not None:
-            if isinstance(exchange, str):
-                exchange = [exchange]
-            elif isinstance(exchange, list):
+            if isinstance(exchange, (str,list)):
+                if isinstance(exchange,str):
+                    exchange = [exchange.upper()]
+                else:
+                    exchange = [el.upper() for el in exchange]
                 if not _EXCHANGE_LIST.issuperset(set(exchange)):
                     raise ValueError('Some exchange included are invalid')
             else: 
@@ -147,9 +149,9 @@ class Tickers():
             self.data = self.data[self.data['exchange'].isin(exchange)]
 
         if sectors is not None:
-            if isinstance(sectors, str):
-                sectors = [sectors]
-            elif isinstance(sectors, list):
+            if isinstance(sectors, (str,list)):
+                if isinstance(sectors,str):
+                    sectors = [sectors]
                 if not _SECTORS_LIST.issuperset(set(sectors)):
                     raise ValueError('Some sectors included are invalid')
             else:

@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import streamlit as st
-import tickers as tick
+import tickers as tk
 
 
 def generate_mktcap_values(max_value):
@@ -34,11 +34,11 @@ if 'ticker_data' not in st.session_state:
     # and persist across re-runs. 
     # every time that and update (button, slider) happens, streamlit re runs the whole file.
     # ticker data is the instance that will keep the updates across the runs
-    st.session_state.ticker_data = tick.Tickers()
+    st.session_state.ticker_data = tk.Tickers()
 
 if 'original_data' not in st.session_state:
     # original data is the instance that is permanent across runs but will never be updated
-    st.session_state.original_data = tick.Tickers()
+    st.session_state.original_data = tk.Tickers()
 
 ticker_data = st.session_state.ticker_data
 original_data = st.session_state.original_data
