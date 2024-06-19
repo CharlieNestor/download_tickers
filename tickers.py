@@ -79,6 +79,32 @@ def getDownloadPath():
     return downloads_path
 
 
+def generate_mktcap_values(max_value):
+    """
+    input: max value of market cap in the dataset (in USD Millions)
+    output: list of 10 values int/float representing a scale between min value (=0) and max value (=max_value)
+    the scale between 0 and max_value is in log scale because there are few companies with huge capitalization and
+    the majority instead has "normal" values. hence the log.
+    """
+    # round the max value to the next 100k (which means 100 billions)
+    max_value_rounded = np.ceil(max_value / 100_000) * 100_000
+    log_values = np.logspace(0, np.log10(max_value_rounded), num=10)
+    values = list(np.concatenate(([0], log_values[1:])))
+    # just different roundings depending on the values
+    for i in range(len(values)):
+        if values[i]<1000:
+            values[i] = float(np.round(values[i],1))
+        elif values[i]<10_000:
+            values[i] = int(np.floor(values[i]/100)*100)
+        elif values[i]<100_000:
+            values[i] = int(np.floor(values[i]/1000)*1000)
+        elif values[i]<1_000_000:
+            values[i] = int(np.floor(values[i]/10000)*10000)
+        else:
+            values[i] = int(np.ceil(values[i]/100_000)*100_000)
+    return values
+
+
 class Tickers():
     """
     Class that handles the ticker dataset.
