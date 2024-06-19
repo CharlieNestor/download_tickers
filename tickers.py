@@ -33,7 +33,7 @@ def params(exchange):
 
 def fetch_exchange_data(exchange):
     """
-    send customized request to the url and output the dataset via pd.DataFrame
+    send customized request to the url and return the dataset via pd.DataFrame
     """
     r = requests.get('https://api.nasdaq.com/api/screener/stocks', headers=headers, params=params(exchange))
     if r.status_code==200:
@@ -48,8 +48,7 @@ def fetch_exchange_data(exchange):
 
 def get_combined_df(NYSE=True, NASDAQ=True, AMEX=True):
     """
-    download DataFrames from all 3 exchanges and output a single DataFrame concatenated 
-    and sorted by ticker
+    download one dataset (pd.DataFrame) from all 3 exchanges and return a unique overall dataset
     """
     df_list = []
     if NYSE:
@@ -66,6 +65,9 @@ def get_combined_df(NYSE=True, NASDAQ=True, AMEX=True):
 
 
 def getDownloadPath():
+    """
+    retrieve the path of downloads folder
+    """
     # Determine the home directory
     home = str(Path.home())
 
@@ -79,12 +81,12 @@ def getDownloadPath():
 
 class Tickers():
     """
-    Class that handle the ticker dataset.
+    Class that handles the ticker dataset.
     Download and store the dataset in 2 DataFrames: 
     - original_dataset for a clean copy
     - data for a modifiable copy
-    Keep the updated version of ticker list in ticker_list; apply different methods to filter the dataset and 
-    download the ticker_list as .csv file in Download folder.
+    The updated version of ticker list is stored in ticker_list; apply different methods to filter the dataset and 
+    download the ticker_list as .csv file in Downloads folder.
     """
 
     def __init__(self):
@@ -109,7 +111,7 @@ class Tickers():
         returns the highest market capitalization (in USD Millions) of the stocks in the dataset
         """
         self.original_dataset = self.original_dataset[self.original_dataset['marketCap']!='']
-        # convert to marketCap to float number and to USD Millions
+        # convert the marketCap field to float number and to USD Millions
         self.original_dataset.loc[:,'marketCap'] = np.round(self.original_dataset.loc[:,'marketCap'].astype(float) / 1000000,2)
         return self.original_dataset['marketCap'].astype(float).max() 
 
@@ -127,7 +129,7 @@ class Tickers():
     
     def apply_filters(self, exchange=None, sectors = None, mktcap_min=None, mktcap_max=None):
         """
-        apply filters to self.data; the dataset is modified inplace
+        apply filters to self.data. the dataset is modified inplace
         """
         # there might be a conflict if self.data is already filtered 
         # the solution here is simply to reset the previous filters and apply ONLY the new ones
