@@ -31,7 +31,7 @@ def params(exchange):
     )
 
 
-def fetch_exchange_data(exchange):
+def fetch_exchange_data(exchange) -> pd.DataFrame:
     """
     send customized request to the url and return the dataset via pd.DataFrame
     """
@@ -46,7 +46,7 @@ def fetch_exchange_data(exchange):
         print(f"Failed to fetch data: {r.status_code}")
 
 
-def get_combined_df(NYSE=True, NASDAQ=True, AMEX=True):
+def get_combined_df(NYSE=True, NASDAQ=True, AMEX=True) -> pd.DataFrame:
     """
     download one dataset (pd.DataFrame) from all 3 exchanges and return a unique overall dataset
     """
@@ -64,7 +64,7 @@ def get_combined_df(NYSE=True, NASDAQ=True, AMEX=True):
     return result_df.sort_values(by='symbol').reset_index(drop=True)
 
 
-def getDownloadPath():
+def getDownloadPath() -> str:
     """
     retrieve the path of downloads folder
     """
@@ -79,7 +79,7 @@ def getDownloadPath():
     return downloads_path
 
 
-def generate_mktcap_values(max_value):
+def generate_mktcap_values(max_value) -> list:
     """
     input: max value of market cap in the dataset (in USD Millions)
     output: list of 10 values int/float representing a scale between min value (=0) and max value (=max_value)
@@ -122,17 +122,17 @@ class Tickers():
         self.tickers_list = self.get_tickers()
         
 
-    def reset_data(self):
+    def reset_data(self) -> None:
         self.data = self.original_dataset.copy()
 
-    def get_tickers(self):
+    def get_tickers(self) -> list:
         return self.data['symbol'].to_list()
     
-    def update_tickers(self):
+    def update_tickers(self) -> None:
         # generally, first we modify self.data, then we update the ticker list
         self.tickers_list = self.get_tickers()
 
-    def calculate_max(self):
+    def calculate_max(self) -> float:
         """
         returns the highest market capitalization (in USD Millions) of the stocks in the dataset
         """
@@ -142,7 +142,7 @@ class Tickers():
         return self.original_dataset['marketCap'].astype(float).max() 
 
 
-    def get_biggest_n_tickers(self, top_n):
+    def get_biggest_n_tickers(self, top_n:int) -> None:
         """
         filter the self.data to obtain only the top_n stocks by market capitalization
         """
@@ -153,7 +153,7 @@ class Tickers():
         self.update_tickers()
     
     
-    def apply_filters(self, exchange=None, sectors = None, mktcap_min=None, mktcap_max=None):
+    def apply_filters(self, exchange:str = None, sectors:str = None, mktcap_min=None, mktcap_max=None) -> None:
         """
         apply filters to self.data. the dataset is modified inplace
         """
@@ -196,7 +196,7 @@ class Tickers():
         self.update_tickers()
 
 
-    def save_tickers(self, filename='tickers.csv'):
+    def save_tickers(self, filename:str ='tickers.csv') -> None:
         """
         save the ticker list as .csv file in the Download folder
         """
