@@ -68,13 +68,13 @@ def getDownloadPath() -> str:
     """
     retrieve the path of Downloads folder in your system
     """
-    # Determine the home directory
+    # determine the home directory
     home = str(Path.home())
 
-    # Path to the Downloads folder
+    # path to the Downloads folder
     if os.name == 'nt':  # For Windows
         downloads_path = os.path.join(home, 'Downloads')
-    else:  # For macOS and Linux
+    else:  # for macOS and Linux
         downloads_path = os.path.join(home, 'Downloads')
     return downloads_path
 
@@ -129,7 +129,7 @@ def generate_mktcap_values(max_value: float) -> list:
     max_value_rounded = np.ceil(max_value / 100_000) * 100_000
     log_values = np.logspace(0, np.log10(max_value_rounded), num=10)
     values = list(np.concatenate(([0], log_values[1:])))
-    # just different roundings depending on the values
+    # round the values to the nearest 100, 1000, 10000, 100000
     for i in range(len(values)):
         if values[i]<1000:
             values[i] = float(np.round(values[i],1))
@@ -177,7 +177,6 @@ class Tickers():
         """
         # convert the marketCap field to float number and to USD Millions
         self.original_dataset.loc[:,'marketCap'] = np.round(self.original_dataset.loc[:,'marketCap'].astype(float) / 1000000,2)
-        #return self.original_dataset['marketCap'].astype(float).max()
         return self.original_dataset['marketCap'].max()
 
 
