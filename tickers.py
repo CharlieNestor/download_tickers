@@ -48,7 +48,7 @@ def fetch_exchange_data(exchange) -> pd.DataFrame:
 
 def get_combined_df(NYSE=True, NASDAQ=True, AMEX=True) -> pd.DataFrame:
     """
-    download one dataset (pd.DataFrame) from all 3 exchanges and return a unique overall dataset
+    download one dataset (pd.DataFrame) from each exchange and return the combined dataset
     """
     df_list = []
     if NYSE:
@@ -61,15 +61,12 @@ def get_combined_df(NYSE=True, NASDAQ=True, AMEX=True) -> pd.DataFrame:
     # select only specific columns from the dataset
     new_order = ['symbol', 'name', 'exchange', 'marketCap', 'sector', 'industry', 'lastsale','volume', 'ipoyear','country','url']
     result_df = result_df[new_order]
-    # Change marketCap and volume to int values
-    #result_df['marketCap'] = result_df['marketCap'].astype(float).astype(int)
-    #result_df['volume'] = result_df['volume'].astype(int)
     return result_df.sort_values(by='symbol').reset_index(drop=True)
 
 
 def getDownloadPath() -> str:
     """
-    retrieve the path of downloads folder
+    retrieve the path of Downloads folder in your system
     """
     # Determine the home directory
     home = str(Path.home())
@@ -81,45 +78,47 @@ def getDownloadPath() -> str:
         downloads_path = os.path.join(home, 'Downloads')
     return downloads_path
 
+
 def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Filters the DataFrame step by step according to the specified criteria.
+    filter the DataFrame step by step according to the specified criteria.
     """
-    # Eliminate tickers with no value for marketCap or volume
+    # eliminate tickers with no value for marketCap or volume
+    # needs this step before converting to int
     df = df[(df['marketCap'] != '') & (df['volume'] != '')]
     
-    # Change marketCap and volume to int values
+    # change marketCap and volume to int values
     df.loc[:, 'marketCap'] = df['marketCap'].astype(float).astype(int)
     df.loc[:, 'volume'] = df['volume'].astype(int)
     
-    # Eliminate tickers with name containing '%'
+    # eliminate tickers with name containing '%'
     df = df[~df['name'].str.contains('%')]
     
-    # Eliminate tickers with name containing 'Warrant'
+    # eliminate tickers with name containing 'Warrant'
     df = df[~df['name'].str.contains('Warrant')]
     
-    # Eliminate tickers with name containing 'Rate'
+    # eliminate tickers with name containing 'Rate'
     df = df[~df['name'].str.contains('Rate')]
     
-    # Eliminate tickers with name containing only 'Fund'
+    # eliminate tickers with name containing only 'Fund'
     df = df[~df['name'].str.contains('Fund ')]
     
-    # Eliminate tickers with name containing only 'Bond'
+    # eliminate tickers with name containing only 'Bond'
     df = df[~df['name'].str.contains('Bond ')]
     
-    # Eliminate tickers with less than 10k volumes and whose marketCap is 0
+    # eliminate tickers with less than 10k volumes and whose marketCap is 0
     df = df[~((df['volume'] < 10000) & (df['marketCap'] == 0))]
     
-    # Eliminate tickers with less than 10k volumes and in its name contains 'Trust'
+    # eliminate tickers with less than 10k volumes and in its name contains 'Trust'
     df = df[~((df['volume'] < 10000) & (df['name'].str.contains('Trust')))]
     
-    # Eliminate tickers with less than 1Mio marketCap and in its name contains 'Fund'
+    # eliminate tickers with less than 1Mio marketCap and in its name contains 'Fund'
     df = df[~((df['marketCap'] < 1000000) & (df['name'].str.contains('Fund')))]
     
     return df
 
 
-def generate_mktcap_values(max_value) -> list:
+def generate_mktcap_values(max_value: float) -> list:
     """
     input: max value of market cap in the dataset (in USD Millions)
     output: list of 10 values int/float representing a scale between min value (=0) and max value (=max_value)
@@ -169,7 +168,7 @@ class Tickers():
         return self.data['symbol'].to_list()
     
     def update_tickers(self) -> None:
-        # generally, first we modify self.data, then we update the ticker list
+        # generally, first modify self.data, then update the ticker list
         self.tickers_list = self.get_tickers()
 
     def calculate_max(self) -> float:
@@ -178,7 +177,8 @@ class Tickers():
         """
         # convert the marketCap field to float number and to USD Millions
         self.original_dataset.loc[:,'marketCap'] = np.round(self.original_dataset.loc[:,'marketCap'].astype(float) / 1000000,2)
-        return self.original_dataset['marketCap'].astype(float).max() 
+        #return self.original_dataset['marketCap'].astype(float).max()
+        return self.original_dataset['marketCap'].max()
 
 
     def get_biggest_n_tickers(self, top_n:int) -> None:
@@ -192,45 +192,40 @@ class Tickers():
         self.update_tickers()
     
     
-    def apply_filters(self, exchange:str = None, sectors:str = None, mktcap_min=None, mktcap_max=None) -> None:
+    def apply_filters(self, exchange = None, sectors = None, mktcap_min=None, mktcap_max=None) -> None:
         """
         apply filters to self.data. the dataset is modified inplace
         """
         # there might be a conflict if self.data is already filtered 
-        # the solution here is simply to reset the previous filters and apply ONLY the new ones
+        # the solution here is simply to reset the previous filters and apply directly the new ones
         # this can be changed and / or optimized
         if len(self.data)!=len(self.original_dataset):
-            self.reset_data()
+            self.reset_data()           # reset the data to the original dataset
 
-        if exchange is not None:
-            if isinstance(exchange, (str,list)):
-                if isinstance(exchange,str):
-                    exchange = [exchange.upper()]
-                else:
-                    exchange = [el.upper() for el in exchange]
-                if not _EXCHANGE_LIST.issuperset(set(exchange)):
-                    raise ValueError('Some exchange included are invalid')
-            else: 
-                raise ValueError('Exchanges should be either a string or a list')
+        # filter by exchange
+        if exchange and isinstance(exchange, (str, list)) and any(exchange):
+            if isinstance(exchange,str):
+                exchange = [exchange.upper()]
+            else:
+                exchange = [el.upper() for el in exchange]
+            if not set(exchange).issubset(set(_EXCHANGE_LIST)):
+                raise ValueError('Some exchange included are invalid')
             exchange = [x.lower() for x in exchange]
             self.data = self.data[self.data['exchange'].isin(exchange)]
 
-        if sectors is not None:
-            if isinstance(sectors, (str,list)):
-                if isinstance(sectors,str):
-                    sectors = [sectors]
-                if not _SECTORS_LIST.issuperset(set(sectors)):
-                    raise ValueError('Some sectors included are invalid')
-            else:
-                raise ValueError('Sectors should be either a string or a list')
+        # filter by sectors
+        if sectors and isinstance(sectors, (str, list)) and any(sectors):
+            if isinstance(sectors,str):
+                sectors = [sectors]
+            if not set(sectors).issubset(set(_SECTORS_LIST)):
+                raise ValueError('Some sectors included are invalid')
             self.data = self.data[self.data['sector'].isin(sectors)]
 
-        if (mktcap_max is not None) or (mktcap_min is not None):
-            
-            if mktcap_min is not None:
-                self.data = self.data[self.data['marketCap'] > mktcap_min]
-            if mktcap_max is not None:
-                self.data = self.data[self.data['marketCap'] < mktcap_max]
+        # filter by market cap
+        if mktcap_min is not None:
+            self.data = self.data[self.data['marketCap'] >= mktcap_min]
+        if mktcap_max is not None:
+            self.data = self.data[self.data['marketCap'] <= mktcap_max]
         
         self.update_tickers()
 
