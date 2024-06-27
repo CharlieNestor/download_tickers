@@ -17,6 +17,21 @@ def main():
         # original data is the instance that is permanent across runs but will never be updated
         st.session_state.original_data = tk.Tickers()
 
+    # initialize session state for selections and slider if they don't exist
+    if 'selected_exch' not in st.session_state:
+        st.session_state.selected_exch = []
+    if 'selected_sectors' not in st.session_state:
+        st.session_state.selected_sectors = []
+    if 'mktcap_range' not in st.session_state:
+        st.session_state.mktcap_range = (1, 10)  # Default range
+
+    # Reset function
+    def reset_selections():
+        st.session_state.selected_exch = []
+        st.session_state.selected_sectors = []
+        st.session_state.mktcap_range = (1, 10)  # Reset to default range
+
+
     ticker_data = st.session_state.ticker_data
     original_data = st.session_state.original_data
 
@@ -35,32 +50,39 @@ def main():
     st.sidebar.write('####')
 
     # Exchange Widget in sidebar
-    exchanges = ("AMEX", "NASDAQ", "NYSE")
+    exchanges = ["AMEX", "NASDAQ", "NYSE"]
     st.sidebar.subheader('Exchanges')
-    selected_exch = st.sidebar.multiselect('Select one or more Exchanges', exchanges)
+    selected_exch = st.sidebar.multiselect('Select one or more Exchanges', exchanges, key='selected_exch')
 
     # Sector Widget in sidebar
-    sectors = ('Basic Materials', 'Consumer Discretionary', 'Consumer Staples', 'Energy', 'Finance',
+    sectors = ['Basic Materials', 'Consumer Discretionary', 'Consumer Staples', 'Energy', 'Finance',
                 'Health Care', 'Industrials', 'Miscellaneous', 'Real Estate', 'Technology', 
-                'Telecommunications', 'Utilities')
+                'Telecommunications', 'Utilities']
     st.sidebar.subheader('Sectors')
-    selected_sectors = st.sidebar.multiselect('Select one or more sectors', sectors)
+    selected_sectors = st.sidebar.multiselect('Select one or more sectors', sectors, key='selected_sectors')
 
     # Market Capitalization Slider in sidebar
     st.sidebar.subheader('Market Capitalization')
-    mktcap_range = st.sidebar.slider('Qualitative increasing scale', min_value=1, max_value=10, value=(1,10))
+    #mktcap_range = st.sidebar.slider('Qualitative increasing scale', min_value=1, max_value=10, value=(1,10))
+    mktcap_range = st.sidebar.slider('Qualitative increasing scale', min_value=1, max_value=10, key='mktcap_range')
+
+    # Reset button
+    st.sidebar.button('Reset Selections', on_click=reset_selections)
 
     # Apply Filters button in sidebar
     st.sidebar.subheader('Apply the filters to the dataset')
     result_apply = st.sidebar.button('Apply')
     if result_apply:
-        ticker_data.apply_filters(exchange=selected_exch, sectors=selected_sectors, 
-                                mktcap_min=mapping[mktcap_range[0]], mktcap_max=mapping[mktcap_range[1]])
-        if mktcap_range is not None:
-            st.subheader('Result of filters')
-            st.write(f'The new dataset contains {len(ticker_data.data)} stocks after the filtering.')
-            st.write(f'The lowest value of capitalization of the selected range is USD {mapping[mktcap_range[0]]} millions; \
-                    the highest value of capitalization of the selected range is USD {mapping[mktcap_range[1]]} millions.')
+        ticker_data.apply_filters(
+                    exchange=selected_exch or None, 
+                    sectors=selected_sectors or None, 
+                    mktcap_min=mapping[mktcap_range[0]], 
+                    mktcap_max=mapping[mktcap_range[1]])
+
+        st.subheader('Result of filters')
+        st.write(f'The new dataset contains {len(ticker_data.data)} stocks after the filtering.')
+        st.write(f'The lowest value of capitalization of the selected range is USD {mapping[mktcap_range[0]]} millions; \
+                the highest value of capitalization of the selected range is USD {mapping[mktcap_range[1]]} millions.')
         st.write(ticker_data.tickers_list)
 
     # User input for top n stock
