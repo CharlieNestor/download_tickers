@@ -59,8 +59,11 @@ def get_combined_df(NYSE=True, NASDAQ=True, AMEX=True) -> pd.DataFrame:
         df_list.append(fetch_exchange_data('amex'))
     result_df = pd.concat(df_list, ignore_index=True)
     # select only specific columns from the dataset
-    new_order = ['symbol', 'name', 'exchange', 'marketCap', 'sector', 'industry', 'lastsale','ipoyear','country','url']
+    new_order = ['symbol', 'name', 'exchange', 'marketCap', 'sector', 'industry', 'lastsale','volume', 'ipoyear','country','url']
     result_df = result_df[new_order]
+    # Change marketCap and volume to int values
+    #result_df['marketCap'] = result_df['marketCap'].astype(float).astype(int)
+    #result_df['volume'] = result_df['volume'].astype(int)
     return result_df.sort_values(by='symbol').reset_index(drop=True)
 
 
@@ -77,6 +80,43 @@ def getDownloadPath() -> str:
     else:  # For macOS and Linux
         downloads_path = os.path.join(home, 'Downloads')
     return downloads_path
+
+def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Filters the DataFrame step by step according to the specified criteria.
+    """
+    # Eliminate tickers with no value for marketCap or volume
+    df = df[(df['marketCap'] != '') & (df['volume'] != '')]
+    
+    # Change marketCap and volume to int values
+    df.loc[:, 'marketCap'] = df['marketCap'].astype(float).astype(int)
+    df.loc[:, 'volume'] = df['volume'].astype(int)
+    
+    # Eliminate tickers with name containing '%'
+    df = df[~df['name'].str.contains('%')]
+    
+    # Eliminate tickers with name containing 'Warrant'
+    df = df[~df['name'].str.contains('Warrant')]
+    
+    # Eliminate tickers with name containing 'Rate'
+    df = df[~df['name'].str.contains('Rate')]
+    
+    # Eliminate tickers with name containing only 'Fund'
+    df = df[~df['name'].str.contains('Fund ')]
+    
+    # Eliminate tickers with name containing only 'Bond'
+    df = df[~df['name'].str.contains('Bond ')]
+    
+    # Eliminate tickers with less than 10k volumes and whose marketCap is 0
+    df = df[~((df['volume'] < 10000) & (df['marketCap'] == 0))]
+    
+    # Eliminate tickers with less than 10k volumes and in its name contains 'Trust'
+    df = df[~((df['volume'] < 10000) & (df['name'].str.contains('Trust')))]
+    
+    # Eliminate tickers with less than 1Mio marketCap and in its name contains 'Fund'
+    df = df[~((df['marketCap'] < 1000000) & (df['name'].str.contains('Fund')))]
+    
+    return df
 
 
 def generate_mktcap_values(max_value) -> list:
@@ -116,9 +156,9 @@ class Tickers():
     """
 
     def __init__(self):
-        self.original_dataset = get_combined_df()
+        self.original_dataset = clean_dataset(get_combined_df())    # download the dataset and clean it
+        self.data = self.original_dataset.copy()                    # copy the original dataset to the modifiable one
         self.max_cap = self.calculate_max()
-        self.data = self.original_dataset.copy()
         self.tickers_list = self.get_tickers()
         
 
@@ -136,7 +176,6 @@ class Tickers():
         """
         returns the highest market capitalization (in USD Millions) of the stocks in the dataset
         """
-        self.original_dataset = self.original_dataset[self.original_dataset['marketCap']!='']
         # convert the marketCap field to float number and to USD Millions
         self.original_dataset.loc[:,'marketCap'] = np.round(self.original_dataset.loc[:,'marketCap'].astype(float) / 1000000,2)
         return self.original_dataset['marketCap'].astype(float).max() 
