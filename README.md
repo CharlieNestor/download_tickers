@@ -34,7 +34,7 @@ streamlit run ticker_streamlit.py
 
 *tickers.py*: \
 Contains the main classes and methods for fetching, cleaning, filtering, and saving ticker data. \
-*tickers_jupyter.ipynb*: \ 
+*tickers_jupyter.ipynb*: \
 Jupyter notebook demonstrating how to use the methods provided in tickers.py. Useful for understanding the workflow and performing custom analyses. \
 *tickers_streamlit.py*: \
 Implements the Streamlit app, providing an interactive interface for users to filter and visualize stock data.
