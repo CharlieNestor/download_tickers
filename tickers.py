@@ -14,6 +14,7 @@ _SECTORS_LIST = {'Basic Materials', 'Consumer Discretionary',
                 'Utilities'
                 }
 
+# these headers are necessary to make the request to the API and not get blocked
 headers = {
     'authority': 'api.nasdaq.com',
     'accept': 'application/json, text/plain, */*',
@@ -31,7 +32,7 @@ def params(exchange):
     )
 
 
-def fetch_exchange_data(exchange) -> pd.DataFrame:
+def fetch_exchange_data(exchange: str) -> pd.DataFrame:
     """
     send customized request to the url and return the dataset via pd.DataFrame
     """
@@ -46,7 +47,7 @@ def fetch_exchange_data(exchange) -> pd.DataFrame:
         print(f"Failed to fetch data: {r.status_code}")
 
 
-def get_combined_df(NYSE=True, NASDAQ=True, AMEX=True) -> pd.DataFrame:
+def get_combined_df(NYSE:bool = True, NASDAQ:bool = True, AMEX:bool = True) -> pd.DataFrame:
     """
     download one dataset (pd.DataFrame) from each exchange and return the combined dataset
     """
@@ -120,8 +121,9 @@ def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
 
 def generate_mktcap_values(max_value: float) -> list:
     """
-    input: max value of market cap in the dataset (in USD Millions)
-    output: list of 10 values int/float representing a scale between min value (=0) and max value (=max_value)
+    generates a list of 10 values in log scale between 0 and max_value
+    : param max_value: float, max value of market cap in the dataset (in USD Millions)
+    : output: list of 10 values int/float representing a scale between min value (=0) and max value (=max_value)
     the scale between 0 and max_value is in log scale because there are few companies with huge capitalization and
     the majority instead has "normal" values. hence the log.
     """
@@ -191,12 +193,16 @@ class Tickers():
         self.update_tickers()
     
     
-    def apply_filters(self, exchange = None, sectors = None, mktcap_min=None, mktcap_max=None) -> None:
+    def apply_filters(self, exchange:str = None, sectors:str = None, mktcap_min=None, mktcap_max=None) -> None:
         """
         apply filters to self.data. the dataset is modified inplace
+        : param exchange: str or list of str, exchanges to filter by
+        : param sectors: str or list of str, sectors to filter by
+        : param mktcap_min: int/float, minimum market capitalization to filter by
+        : param mktcap_max: int/float, maximum market capitalization to filter by
         """
         # there might be a conflict if self.data is already filtered 
-        # the solution here is simply to reset the previous filters and apply directly the new ones
+        # the solution here is simply to reset the previous filters and apply directly the new filters
         # this can be changed and / or optimized
         if len(self.data)!=len(self.original_dataset):
             self.reset_data()           # reset the data to the original dataset
@@ -229,15 +235,22 @@ class Tickers():
         self.update_tickers()
 
 
-    def save_tickers(self, filename:str ='tickers.csv') -> None:
+    def save_tickers(self, filename:str ='tickers.txt', csvformat:bool = False) -> None:
         """
-        save the ticker list as .csv file in the Download folder
+        save the ticker list as .txt or .csv file in the Downloads folder
         """
         tickers2save = self.tickers_list
         tickers2save.sort()
         full_path = os.path.join(getDownloadPath(), filename)
-        with open(full_path, mode='w', newline='') as file:
-            writer = csv.writer(file)
-            for ticker in tickers2save:
-                writer.writerow([ticker])
+
+        if csvformat:
+            filename = 'tickers.csv'
+            full_path = os.path.join(getDownloadPath(), filename)
+            with open(full_path, mode='w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(tickers2save)
+        else:
+            with open(full_path, mode='w') as file:
+                for ticker in tickers2save:
+                    file.write(f"{ticker}\n")
     
