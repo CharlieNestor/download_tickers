@@ -95,7 +95,7 @@ def main():
     st.sidebar.subheader('Download the Ticker List')
     result_down = st.sidebar.button('Download')
     if result_down:
-        ticker_data.save_tickers()
+        ticker_data.save_tickers(csvformat=False)
         st.write(f'{len(ticker_data.data)} tickers have been downloaded.')
         st.write(ticker_data.tickers_list)
 
