@@ -28,8 +28,6 @@ streamlit run ticker_streamlit.py
 ```
 
 ## Project Structure
-
-## Project Structure
 - `tickers.py`: Core functionality for data operations
 - `tickers_jupyter.ipynb`: Tutorial and exploration notebook
 - `tickers_streamlit.py`: Interactive Streamlit application
