@@ -49,7 +49,10 @@ def fetch_exchange_data(exchange: str) -> pd.DataFrame:
 
 def get_combined_df(NYSE:bool = True, NASDAQ:bool = True, AMEX:bool = True) -> pd.DataFrame:
     """
-    download one dataset (pd.DataFrame) from each exchange and return the combined dataset
+    download one dataset from each exchange and return the combined dataset
+    : param NYSE: bool, whether to include NYSE stocks
+    : param NASDAQ: bool, whether to include NASDAQ stocks
+    : param AMEX: bool, whether to include AMEX stocks
     """
     df_list = []
     if NYSE:
@@ -83,6 +86,7 @@ def getDownloadPath() -> str:
 def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
     """
     filter the DataFrame step by step according to the specified criteria.
+    : param df: pd.DataFrame, the original dataset
     """
     # eliminate tickers with no value for marketCap or volume
     # needs this step before converting to int
@@ -123,7 +127,7 @@ def generate_mktcap_values(max_value: float) -> list:
     """
     generates a list of 10 values in log scale between 0 and max_value
     : param max_value: float, max value of market cap in the dataset (in USD Millions)
-    : output: list of 10 values int/float representing a scale between min value (=0) and max value (=max_value)
+    : return: list of 10 values int/float representing a scale between min value (=0) and max value (=max_value)
     the scale between 0 and max_value is in log scale because there are few companies with huge capitalization and
     the majority instead has "normal" values. hence the log.
     """
@@ -176,6 +180,7 @@ class Tickers():
     def calculate_max(self) -> float:
         """
         returns the highest market capitalization (in USD Millions) of the stocks in the dataset
+        : return: float, the highest market capitalization in the dataset
         """
         # convert the marketCap field to float number and to USD Millions
         self.original_dataset.loc[:,'marketCap'] = np.round(self.original_dataset.loc[:,'marketCap'].astype(float) / 1000000,2)
@@ -185,6 +190,7 @@ class Tickers():
     def get_biggest_n_tickers(self, top_n:int) -> None:
         """
         filter the self.data to obtain only the top_n stocks by market capitalization
+        : param top_n: int, number of top stocks to keep
         """
         if top_n>=len(self.data):
             self.data = self.data.sort_values('marketCap', ascending=False)
@@ -204,15 +210,12 @@ class Tickers():
         # there might be a conflict if self.data is already filtered 
         # the solution here is simply to reset the previous filters and apply directly the new filters
         # this can be changed and / or optimized
-        if len(self.data)!=len(self.original_dataset):
-            self.reset_data()           # reset the data to the original dataset
+        self.reset_data()
 
         # filter by exchange
         if exchange and isinstance(exchange, (str, list)) and any(exchange):
-            if isinstance(exchange,str):
+            if isinstance(exchange, str):
                 exchange = [exchange.upper()]
-            else:
-                exchange = [el.upper() for el in exchange]
             if not set(exchange).issubset(set(_EXCHANGE_LIST)):
                 raise ValueError('Some exchange included are invalid')
             exchange = [x.lower() for x in exchange]
@@ -220,7 +223,7 @@ class Tickers():
 
         # filter by sectors
         if sectors and isinstance(sectors, (str, list)) and any(sectors):
-            if isinstance(sectors,str):
+            if isinstance(sectors, str):
                 sectors = [sectors]
             if not set(sectors).issubset(set(_SECTORS_LIST)):
                 raise ValueError('Some sectors included are invalid')
@@ -238,18 +241,23 @@ class Tickers():
     def save_tickers(self, filename:str ='tickers.txt', csvformat:bool = False) -> None:
         """
         save the ticker list as .txt or .csv file in the Downloads folder
+        : param filename: str, name of the file to save
+        : param csvformat: bool, whether to save the file in .csv format or not
         """
         tickers2save = self.tickers_list
         tickers2save.sort()
+        # the filepath leads to the Downloads folder
         full_path = os.path.join(getDownloadPath(), filename)
 
         if csvformat:
+            # save the tickers in a csv file
             filename = 'tickers.csv'
             full_path = os.path.join(getDownloadPath(), filename)
             with open(full_path, mode='w', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerow(tickers2save)
         else:
+            # save the tickers in a txt file
             with open(full_path, mode='w') as file:
                 for ticker in tickers2save:
                     file.write(f"{ticker}\n")
