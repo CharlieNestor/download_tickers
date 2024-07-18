@@ -4,6 +4,7 @@ import requests
 import pandas as pd
 import numpy as np
 from pathlib import Path
+from typing import Union
 
 _EXCHANGE_LIST = {'NYSE', 'NASDAQ', 'AMEX'}
 
@@ -199,7 +200,7 @@ class Tickers():
         self.update_tickers()
     
     
-    def apply_filters(self, exchange:str = None, sectors:str = None, mktcap_min=None, mktcap_max=None) -> None:
+    def apply_filters(self, exchange:Union[str, list] = None, sectors:Union[str, list] = None, mktcap_min=None, mktcap_max=None) -> None:
         """
         apply filters to self.data. the dataset is modified inplace
         : param exchange: str or list of str, exchanges to filter by
@@ -216,6 +217,8 @@ class Tickers():
         if exchange and isinstance(exchange, (str, list)) and any(exchange):
             if isinstance(exchange, str):
                 exchange = [exchange.upper()]
+            else:
+                exchange = [x.upper() for x in exchange]
             if not set(exchange).issubset(set(_EXCHANGE_LIST)):
                 raise ValueError('Some exchange included are invalid')
             exchange = [x.lower() for x in exchange]
