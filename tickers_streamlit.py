@@ -68,7 +68,7 @@ def main():
     st.sidebar.button('Reset Selections', on_click=reset_selections)
 
     # Apply Filters button in sidebar
-    st.sidebar.subheader('Apply the filters to the dataset')
+    st.sidebar.subheader('Apply the filters')
     result_apply = st.sidebar.button('Apply')
     if result_apply:
         ticker_data.apply_filters(
@@ -84,7 +84,7 @@ def main():
         st.write(ticker_data.tickers_list)
 
     # User input for top n stock
-    st.sidebar.subheader('Filter the top stocks in terms of Market Cap')
+    st.sidebar.subheader('Top k stocks in terms of Market Cap')
     top_stocks = st.sidebar.number_input(label='number of stocks', min_value=1, max_value=1000, value=None)
     top_button = st.sidebar.button('Select Top Stocks')
     if top_button:
