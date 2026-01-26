@@ -1,31 +1,25 @@
-# US Stock Ticker Analysis
+# US Stock Ticker Downloader
 
-Streamline your access to US stock market data. This tool provides an easy way to retrieve comprehensive lists of US stock tickers, ideal for testing trading systems or conducting technical analysis.
+A simple tool to download and filter US stock tickers (NYSE, NASDAQ, AMEX).
 
-## Key Features
-- Data retrieval from NYSE, NASDAQ, and AMEX exchanges
-- Intelligent data cleaning for liquid and relevant companies
-- Filtering by exchange, sector, and market capitalization
-- Top N stocks ranking by market cap
-- Export filtered lists as .txt or .csv files
-- User-friendly Streamlit interface for interactive data exploration
-
-## How It Works
-The program uses web scraping to extract current stock information from the Nasdaq website, ensuring up-to-date data for your analysis.
+## Features
+- **Fetch**: Get up-to-date tickers from major US exchanges.
+- **Filter**: Narrow down by exchange, sector, and market cap.
+- **Export**: Save your filtered list as a clean CSV file.
 
 ## Usage
 
-### Jupyter Notebook
-Explore `tickers_jupyter.ipynb` for in-depth examples and analysis.
-
-### Streamlit App
-Run the interactive interface via Terminal:
+**Interactive App**
+Run the Streamlit app to explore and download tickers:
 ```sh
-streamlit run ticker_streamlit.py
+streamlit run tickers_streamlit.py
 ```
 
-## Project Structure
-- `tickers.py`: Core functionality for data operations
-- `tickers_jupyter.ipynb`: Tutorial and exploration notebook
-- `tickers_streamlit.py`: Interactive Streamlit application
+**Jupyter Notebook**
+Check `tickers_jupyter.ipynb` for usage examples.
+
+## Files
+- `tickers.py`: Core logic.
+- `tickers_streamlit.py`: Streamlit dashboard.
+- `tickers_jupyter.ipynb`: Demo notebook.
 

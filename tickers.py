@@ -183,9 +183,8 @@ class Tickers():
         returns the highest market capitalization (in USD Millions) of the stocks in the dataset
         : return: float, the highest market capitalization in the dataset
         """
-        # convert the marketCap field to float number and to USD Millions
-        self.original_dataset.loc[:,'marketCap'] = np.round(self.original_dataset.loc[:,'marketCap'].astype(float) / 1000000,2)
-        return self.original_dataset['marketCap'].max()
+        # return the max value in USD Millions without modifying the dataset
+        return np.round(self.original_dataset['marketCap'].max() / 1_000_000, 2)
 
 
     def get_biggest_n_tickers(self, top_n:int) -> None:
@@ -241,27 +240,18 @@ class Tickers():
         self.update_tickers()
 
 
-    def save_tickers(self, filename:str ='tickers.txt', csvformat:bool = False) -> None:
+    def save_tickers(self, filename:str ='tickers.csv') -> None:
         """
-        save the ticker list as .txt or .csv file in the Downloads folder
+        save the ticker list as .csv file in the Downloads folder
         : param filename: str, name of the file to save
-        : param csvformat: bool, whether to save the file in .csv format or not
         """
         tickers2save = self.tickers_list
         tickers2save.sort()
         # the filepath leads to the Downloads folder
         full_path = os.path.join(getDownloadPath(), filename)
 
-        if csvformat:
-            # save the tickers in a csv file
-            filename = 'tickers.csv'
-            full_path = os.path.join(getDownloadPath(), filename)
-            with open(full_path, mode='w', newline='') as file:
-                writer = csv.writer(file)
-                writer.writerow(tickers2save)
-        else:
-            # save the tickers in a txt file
-            with open(full_path, mode='w') as file:
-                for ticker in tickers2save:
-                    file.write(f"{ticker}\n")
+        # save the tickers in a csv file
+        with open(full_path, mode='w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(tickers2save)
     

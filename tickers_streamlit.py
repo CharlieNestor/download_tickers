@@ -11,9 +11,7 @@ def main():
         # ticker data is the instance that will keep the updates across the runs
         st.session_state.ticker_data = tk.Tickers()
 
-    if 'original_data' not in st.session_state:
-        # original data is the instance that is permanent across runs but will never be updated
-        st.session_state.original_data = tk.Tickers()
+
 
     # initialize session state for selections and slider if they don't exist
     if 'selected_exch' not in st.session_state:
@@ -31,17 +29,19 @@ def main():
 
 
     ticker_data = st.session_state.ticker_data
-    original_data = st.session_state.original_data
+    ticker_data = st.session_state.ticker_data
+    # Use the original_dataset from the single ticker_data instance
+    original_data = ticker_data.original_dataset
 
-    mapping = {i+1:item for i, item in enumerate(tk.generate_mktcap_values(original_data.max_cap)) }
+    mapping = {i+1:item for i, item in enumerate(tk.generate_mktcap_values(ticker_data.max_cap)) }
 
 
     st.title("US Listed Stock Tickers")
     st.write('###')         # defines the spacing: more #, less space inbetween
 
     # Show the original dataset
-    st.dataframe(original_data.data)
-    st.write(f'There are {len(original_data.data)} stocks in the original dataset.')
+    st.dataframe(original_data)
+    st.write(f'There are {len(original_data)} stocks in the original dataset.')
 
     # Sidebar title
     st.sidebar.header('Filter the Dataset')
@@ -74,8 +74,9 @@ def main():
         ticker_data.apply_filters(
                     exchange=selected_exch or None, 
                     sectors=selected_sectors or None, 
-                    mktcap_min=mapping[mktcap_range[0]], 
-                    mktcap_max=mapping[mktcap_range[1]])
+                    # Convert Millions back to raw units for filtering
+                    mktcap_min=mapping[mktcap_range[0]] * 1_000_000, 
+                    mktcap_max=mapping[mktcap_range[1]] * 1_000_000)
 
         st.subheader('Result of filters')
         st.write(f'The new dataset contains {len(ticker_data.data)} stocks after the filtering.')
@@ -95,8 +96,8 @@ def main():
     st.sidebar.subheader('Download the Ticker List')
     result_down = st.sidebar.button('Download')
     if result_down:
-        ticker_data.save_tickers(csvformat=False)
-        st.write(f'{len(ticker_data.data)} tickers have been downloaded.')
+        ticker_data.save_tickers()
+        st.write(f'{len(ticker_data.data)} tickers have been downloaded to tickers.csv.')
         st.write(ticker_data.tickers_list)
 
     # Checkbox to show the filtered dataset
