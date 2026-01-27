@@ -2,6 +2,17 @@ import streamlit as st
 import tickers as tk
 
 
+def format_currency(value):
+    if value >= 1_000_000_000_000:
+        return f"{value / 1_000_000_000_000:.2f} Trillion"
+    elif value >= 1_000_000_000:
+        return f"{value / 1_000_000_000:.2f} Billion"
+    elif value >= 1_000_000:
+        return f"{value / 1_000_000:.2f} Million"
+    else:
+        return f"{value}"
+
+
 def main():
 
     if 'ticker_data' not in st.session_state:
@@ -40,8 +51,10 @@ def main():
     st.write('###')         # defines the spacing: more #, less space inbetween
 
     # Show the original dataset
-    st.dataframe(original_data)
-    st.write(f'There are {len(original_data)} stocks in the original dataset.')
+    # Show the original dataset
+    with st.expander("Show Original Dataset", expanded=False):
+        st.dataframe(original_data)
+        st.write(f'There are {len(original_data)} stocks in the original dataset.')
 
     # Sidebar title
     st.sidebar.header('Filter the Dataset')
@@ -80,9 +93,15 @@ def main():
 
         st.subheader('Result of filters')
         st.write(f'The new dataset contains {len(ticker_data.data)} stocks after the filtering.')
-        st.write(f'The lowest value of capitalization of the selected range is USD {mapping[mktcap_range[0]] / 1_000_000} millions; \
-                the highest value of capitalization of the selected range is USD {mapping[mktcap_range[1]] / 1_000_000} millions.')
+        
+        min_val_fmt = format_currency(mapping[mktcap_range[0]])
+        max_val_fmt = format_currency(mapping[mktcap_range[1]])
+        
+        st.write(f'The lowest value of capitalization of the selected range is **{min_val_fmt}**; \
+                the highest value of capitalization of the selected range is **{max_val_fmt}**.')
         st.write(ticker_data.tickers_list)
+
+
 
     # User input for top n stock
     st.sidebar.subheader('Top k stocks in terms of Market Cap')
@@ -92,20 +111,21 @@ def main():
         if top_stocks:
             ticker_data.get_biggest_n_tickers(top_stocks)
 
-    # Download button 
-    st.sidebar.subheader('Download the Ticker List')
-    result_down = st.sidebar.button('Download')
-    if result_down:
-        ticker_data.save_tickers()
-        st.write(f'{len(ticker_data.data)} tickers have been downloaded to tickers.csv.')
-        st.write(ticker_data.tickers_list)
-
     # Checkbox to show the filtered dataset
     st.write('######')
     filtered_check = st.checkbox('Show the filtered dataset')
     if filtered_check:
         st.write(ticker_data.data)
         st.write(f'There are {len(ticker_data.data)} stocks in the filtered dataset.')
+    
+    st.write('---')
+    st.subheader('Download Data')
+    # Download button in the main window
+    result_down = st.button('Download Ticker List', type='primary')
+    if result_down:
+        ticker_data.save_tickers()
+        st.success(f'{len(ticker_data.data)} tickers have been downloaded to your Downloads folder (tickers.csv).')
+        st.write(ticker_data.tickers_list)
 
 
 if __name__ == '__main__':
