@@ -74,14 +74,14 @@ def main():
         ticker_data.apply_filters(
                     exchange=selected_exch or None, 
                     sectors=selected_sectors or None, 
-                    # Convert Millions back to raw units for filtering
-                    mktcap_min=mapping[mktcap_range[0]] * 1_000_000, 
-                    mktcap_max=mapping[mktcap_range[1]] * 1_000_000)
+                    # Use raw units directly
+                    mktcap_min=mapping[mktcap_range[0]], 
+                    mktcap_max=mapping[mktcap_range[1]])
 
         st.subheader('Result of filters')
         st.write(f'The new dataset contains {len(ticker_data.data)} stocks after the filtering.')
-        st.write(f'The lowest value of capitalization of the selected range is USD {mapping[mktcap_range[0]]} millions; \
-                the highest value of capitalization of the selected range is USD {mapping[mktcap_range[1]]} millions.')
+        st.write(f'The lowest value of capitalization of the selected range is USD {mapping[mktcap_range[0]] / 1_000_000} millions; \
+                the highest value of capitalization of the selected range is USD {mapping[mktcap_range[1]] / 1_000_000} millions.')
         st.write(ticker_data.tickers_list)
 
     # User input for top n stock

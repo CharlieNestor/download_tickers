@@ -127,27 +127,35 @@ def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
 def generate_mktcap_values(max_value: float) -> list:
     """
     generates a list of 10 values in log scale between 0 and max_value
-    : param max_value: float, max value of market cap in the dataset (in USD Millions)
+    : param max_value: float, max value of market cap in the dataset (in USD raw value)
     : return: list of 10 values int/float representing a scale between min value (=0) and max value (=max_value)
     the scale between 0 and max_value is in log scale because there are few companies with huge capitalization and
     the majority instead has "normal" values. hence the log.
     """
-    # round the max value to the next 100k (which means 100 billions)
-    max_value_rounded = np.ceil(max_value / 100_000) * 100_000
-    log_values = np.logspace(0, np.log10(max_value_rounded), num=10)
+    # round the max value to the next 100 Billion (100_000_000_000)
+    max_value_rounded = np.ceil(max_value / 100_000_000_000) * 100_000_000_000
+    # Log scale starting from 1 Million (10^6) to Max Value
+    # We use 6 because 10^6 = 1,000,000
+    log_values = np.logspace(6, np.log10(max_value_rounded), num=10)
     values = list(np.concatenate(([0], log_values[1:])))
-    # round the values to the nearest 100, 1000, 10000, 100000
+    
+    # round the values to the nearest reasonable unit based on magnitude
     for i in range(len(values)):
-        if values[i]<1000:
-            values[i] = float(np.round(values[i],1))
-        elif values[i]<10_000:
-            values[i] = int(np.floor(values[i]/100)*100)
-        elif values[i]<100_000:
-            values[i] = int(np.floor(values[i]/1000)*1000)
-        elif values[i]<1_000_000:
-            values[i] = int(np.floor(values[i]/10000)*10000)
+        if values[i] < 1_000_000_000: # Less than 1 Billion
+            # Round to nearest 100k
+            values[i] = int(np.round(values[i] / 100_000) * 100_000)
+        elif values[i] < 10_000_000_000: # Less than 10 Billion
+            # Round to nearest 100M (was 100 in previous millions logic)
+            values[i] = int(np.floor(values[i] / 100_000_000) * 100_000_000)
+        elif values[i] < 100_000_000_000: # Less than 100 Billion
+            # Round to nearest 1B (was 1000 in previous millions logic)
+            values[i] = int(np.floor(values[i] / 1_000_000_000) * 1_000_000_000)
+        elif values[i] < 1_000_000_000_000: # Less than 1 Trillion
+            # Round to nearest 10B (was 10000 in previous millions logic)
+            values[i] = int(np.floor(values[i] / 10_000_000_000) * 10_000_000_000)
         else:
-            values[i] = int(np.ceil(values[i]/100_000)*100_000)
+            # Round to nearest 100B (was 100,000 in previous millions logic)
+            values[i] = int(np.ceil(values[i] / 100_000_000_000) * 100_000_000_000)
     return values
 
 
@@ -180,11 +188,11 @@ class Tickers():
 
     def calculate_max(self) -> float:
         """
-        returns the highest market capitalization (in USD Millions) of the stocks in the dataset
+        returns the highest market capitalization of the stocks in the dataset
         : return: float, the highest market capitalization in the dataset
         """
-        # return the max value in USD Millions without modifying the dataset
-        return np.round(self.original_dataset['marketCap'].max() / 1_000_000, 2)
+        # return the max value in USD without modifying the dataset
+        return self.original_dataset['marketCap'].max()
 
 
     def get_biggest_n_tickers(self, top_n:int) -> None:
